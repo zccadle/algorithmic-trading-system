@@ -38,5 +38,5 @@ build/
 *.vcxproj.user
 
 # Rust Build Artifacts
-/target/
+target/
 Cargo.lock
