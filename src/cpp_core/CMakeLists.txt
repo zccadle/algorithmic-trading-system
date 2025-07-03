@@ -28,3 +28,7 @@ FetchContent_MakeAvailable(benchmark)
 # Create benchmark executable
 add_executable(order_book_benchmark src/order_book_benchmark.cpp)
 target_link_libraries(order_book_benchmark order_book benchmark::benchmark)
+
+# Create replay tool executable
+add_executable(replay_tool src/replay_tool.cpp)
+target_link_libraries(replay_tool order_book)
