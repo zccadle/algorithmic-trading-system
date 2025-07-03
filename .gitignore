@@ -1,0 +1,42 @@
+# General
+.DS_Store
+*.log
+*.swp
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.vshost.exe
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# C++ Build Artifacts (CMake)
+build/
+build/
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+*.cmake.user
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Rust Build Artifacts
+/target/
+Cargo.lock
