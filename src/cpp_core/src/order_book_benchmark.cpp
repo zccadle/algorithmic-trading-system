@@ -80,8 +80,58 @@ static void BM_BestPriceQueries(benchmark::State& state) {
     }
 }
 
+static void BM_MatchingEngine(benchmark::State& state) {
+    std::mt19937 rng(42); // Deterministic seed for reproducibility
+    
+    for (auto _ : state) {
+        OrderBook book;
+        int total_trades = 0;
+        
+        // Pre-populate the book with 1000 orders to create liquidity
+        // Create a tighter spread for more realistic matching
+        for (int i = 0; i < 1000; ++i) {
+            double base_price = 100.0;
+            double spread = 0.05; // 5 cent spread
+            
+            if (i % 2 == 0) {
+                // Buy orders: 99.50 to 99.95
+                double price = base_price - spread - (i % 10) * 0.01;
+                book.add_order(i, price, 100, true);
+            } else {
+                // Sell orders: 100.05 to 100.50
+                double price = base_price + spread + (i % 10) * 0.01;
+                book.add_order(i, price, 100, false);
+            }
+        }
+        
+        // Add 1000 aggressive "market-crossing" orders
+        std::uniform_real_distribution<double> aggressive_dist(0.0, 1.0);
+        std::uniform_int_distribution<int> quantity_dist(50, 150);
+        
+        for (int i = 1000; i < 2000; ++i) {
+            int quantity = quantity_dist(rng);
+            
+            if (aggressive_dist(rng) < 0.5) {
+                // Aggressive buy order (crosses the spread)
+                double price = 100.10 + aggressive_dist(rng) * 0.40; // 100.10 to 100.50
+                auto trades = book.add_order(i, price, quantity, true);
+                total_trades += trades.size();
+            } else {
+                // Aggressive sell order (crosses the spread)
+                double price = 99.90 - aggressive_dist(rng) * 0.40; // 99.50 to 99.90
+                auto trades = book.add_order(i, price, quantity, false);
+                total_trades += trades.size();
+            }
+        }
+        
+        benchmark::DoNotOptimize(book);
+        benchmark::DoNotOptimize(total_trades);
+    }
+}
+
 BENCHMARK(BM_AddOrders);
 BENCHMARK(BM_MixedOperations);
 BENCHMARK(BM_BestPriceQueries);
+BENCHMARK(BM_MatchingEngine);
 
 BENCHMARK_MAIN();

@@ -70,5 +70,52 @@ fn benchmark_best_price_queries(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, benchmark_add_orders, benchmark_mixed_operations, benchmark_best_price_queries);
+fn benchmark_matching_engine(c: &mut Criterion) {
+    let mut rng = StdRng::seed_from_u64(42); // Deterministic seed for reproducibility
+    
+    c.bench_function("matching_engine", |b| {
+        b.iter(|| {
+            let mut book = OrderBook::new();
+            let mut total_trades = 0;
+            
+            // Pre-populate the book with 1000 orders to create liquidity
+            // Create a tighter spread for more realistic matching
+            for i in 0..1000 {
+                let base_price = 100.0;
+                let spread = 0.05; // 5 cent spread
+                
+                if i % 2 == 0 {
+                    // Buy orders: 99.50 to 99.95
+                    let price = base_price - spread - (i % 10) as f64 * 0.01;
+                    book.add_order(i, price, 100, true);
+                } else {
+                    // Sell orders: 100.05 to 100.50
+                    let price = base_price + spread + (i % 10) as f64 * 0.01;
+                    book.add_order(i, price, 100, false);
+                }
+            }
+            
+            // Add 1000 aggressive "market-crossing" orders
+            for i in 1000..2000 {
+                let quantity = rng.gen_range(50..=150);
+                
+                if rng.gen::<f64>() < 0.5 {
+                    // Aggressive buy order (crosses the spread)
+                    let price = 100.10 + rng.gen::<f64>() * 0.40; // 100.10 to 100.50
+                    let trades = book.add_order(i, price, quantity, true);
+                    total_trades += trades.len();
+                } else {
+                    // Aggressive sell order (crosses the spread)
+                    let price = 99.90 - rng.gen::<f64>() * 0.40; // 99.50 to 99.90
+                    let trades = book.add_order(i, price, quantity, false);
+                    total_trades += trades.len();
+                }
+            }
+            
+            black_box(total_trades);
+        });
+    });
+}
+
+criterion_group!(benches, benchmark_add_orders, benchmark_mixed_operations, benchmark_best_price_queries, benchmark_matching_engine);
 criterion_main!(benches);
