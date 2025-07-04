@@ -53,7 +53,7 @@ jobs:
     - name: Run tests
       run: |
         cd src/cpp_core/build
-        ./orderbook_test
+        ./order_book_test
         ./fix_test
         ./sor_test
         ./mm_test

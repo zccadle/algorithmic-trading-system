@@ -50,6 +50,12 @@ pub struct OrderBook {
     next_trade_id: u32,
 }
 
+impl Default for OrderBook {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OrderBook {
     pub fn new() -> Self {
         OrderBook {
@@ -218,10 +224,10 @@ impl OrderBook {
             
             if is_buy_side {
                 *self.buy_levels.entry(Reverse(price_key)).or_insert(0) += remaining_quantity;
-                self.buy_orders_at_level.entry(Reverse(price_key)).or_insert_with(Vec::new).push(order_id);
+                self.buy_orders_at_level.entry(Reverse(price_key)).or_default().push(order_id);
             } else {
                 *self.sell_levels.entry(price_key).or_insert(0) += remaining_quantity;
-                self.sell_orders_at_level.entry(price_key).or_insert_with(Vec::new).push(order_id);
+                self.sell_orders_at_level.entry(price_key).or_default().push(order_id);
             }
             
             self.orders.insert(order_id, order);
