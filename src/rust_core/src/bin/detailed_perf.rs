@@ -15,7 +15,7 @@ fn main() {
         let start = Instant::now();
         let mut book = OrderBook::new();
         for i in 0..1000 {
-            book.add_order(i, 100.0 + (i % 20) as f64, 10, i % 2 == 0);
+            book.add_order(i, 100.0 + (i % 20) as f64, 10, i.is_multiple_of(&2));
         }
         timings.push(start.elapsed());
     }
@@ -48,7 +48,7 @@ fn main() {
     for i in 0..100 {
         let mut book = OrderBook::new();
         for j in 0..100 {
-            book.add_order(i * 100 + j, 100.0 + j as f64, 10, j % 2 == 0);
+            book.add_order(i * 100 + j, 100.0 + j as f64, 10, j.is_multiple_of(&2));
         }
         books.push(book);
     }

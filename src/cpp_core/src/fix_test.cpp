@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <limits>
 #include "fix_parser.h"
 #include "order_book.h"
 
