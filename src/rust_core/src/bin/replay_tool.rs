@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     
     // Read market data from CSV
-    println!("\nReading market data from: {}", csv_path);
+    println!("\nReading market data from: {csv_path}");
     let file = File::open(&csv_path)?;
     let mut reader = Reader::from_reader(file);
     
@@ -93,7 +93,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Print summary
     println!("\n=== Replay Summary ===");
     println!("Total orders processed: {}", orders.len());
-    println!("Total trades generated: {}", total_trades);
+    println!("Total trades generated: {total_trades}");
     println!("Processing time: {} microseconds", duration.as_micros());
     println!("Average time per order: {:.2} microseconds",
              duration.as_micros() as f64 / orders.len() as f64);

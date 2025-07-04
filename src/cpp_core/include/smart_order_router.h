@@ -8,6 +8,7 @@
 #include <limits>
 #include <algorithm>
 #include <chrono>
+#include <string>
 #include "order_book.h"
 
 enum class ExchangeID {

@@ -24,9 +24,12 @@ impl Trade {
 
 #[derive(Debug, Clone)]
 pub struct Order {
+    #[allow(dead_code)]
     pub order_id: u32,
+    #[allow(dead_code)]
     pub price: f64,
     pub quantity: u32,
+    #[allow(dead_code)]
     pub is_buy_side: bool,
 }
 
@@ -236,6 +239,7 @@ impl OrderBook {
         trades
     }
     
+    #[allow(dead_code)]
     pub fn cancel_order(&mut self, order_id: u32) -> bool {
         if let Some(order) = self.orders.remove(&order_id) {
             let price_key = (order.price * 100.0) as u64;

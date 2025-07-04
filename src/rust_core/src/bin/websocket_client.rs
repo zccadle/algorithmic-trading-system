@@ -1,18 +1,19 @@
 use futures_util::{SinkExt, StreamExt};
 use rust_core::order_book::OrderBook;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde::Deserialize;
 use std::collections::HashMap;
-use tokio::net::TcpStream;
-use tokio_tungstenite::{connect_async, tungstenite::protocol::Message, MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
 #[derive(Debug, Deserialize)]
 struct DepthUpdate {
     #[serde(rename = "e")]
+    #[allow(dead_code)]
     event_type: String,
     #[serde(rename = "E")]
+    #[allow(dead_code)]
     event_time: u64,
     #[serde(rename = "s")]
+    #[allow(dead_code)]
     symbol: String,
     #[serde(rename = "b")]
     bids: Vec<Vec<String>>,
@@ -20,13 +21,11 @@ struct DepthUpdate {
     asks: Vec<Vec<String>>,
 }
 
-type WSStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
-
 async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
     // Binance WebSocket endpoint for BTC/USDT depth updates
     let url = "wss://stream.binance.com:9443/ws/btcusdt@depth";
     
-    println!("Connecting to Binance WebSocket stream: {}", url);
+    println!("Connecting to Binance WebSocket stream: {url}");
     
     // Connect to the WebSocket
     let (ws_stream, _) = connect_async(url).await?;
@@ -52,7 +51,7 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                 match serde_json::from_str::<DepthUpdate>(&text) {
                     Ok(depth) => {
                         update_count += 1;
-                        println!("=== Update #{} ===", update_count);
+                        println!("=== Update #{update_count} ===");
                         
                         // Process bids (buy orders)
                         println!("Processing {} bid levels...", depth.bids.len());
@@ -74,11 +73,11 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                                     let trades = order_book.add_order(order_id, price, quantity as u32, true);
                                     
                                     // Track the order
-                                    buy_orders.entry(price_key).or_insert(Vec::new()).clear();
+                                    buy_orders.entry(price_key).or_default().clear();
                                     buy_orders.get_mut(&bid[0]).unwrap().push(order_id);
                                     
                                     if !trades.is_empty() {
-                                        println!("  Generated {} trade(s) from bid @ ${}", trades.len(), price);
+                                        println!("  Generated {} trade(s) from bid @ ${price}", trades.len());
                                     }
                                     
                                     order_id += 1;
@@ -106,11 +105,11 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                                     let trades = order_book.add_order(order_id, price, quantity as u32, false);
                                     
                                     // Track the order
-                                    sell_orders.entry(price_key).or_insert(Vec::new()).clear();
+                                    sell_orders.entry(price_key).or_default().clear();
                                     sell_orders.get_mut(&ask[0]).unwrap().push(order_id);
                                     
                                     if !trades.is_empty() {
-                                        println!("  Generated {} trade(s) from ask @ ${}", trades.len(), price);
+                                        println!("  Generated {} trade(s) from ask @ ${price}", trades.len());
                                     }
                                     
                                     order_id += 1;
@@ -122,14 +121,14 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                         println!("\nLocal Order Book State:");
                         if let Some(best_bid) = order_book.get_best_bid() {
                             let bid_qty = order_book.get_bid_quantity_at(best_bid);
-                            print!("  Best Bid: ${:.2} (Qty: {})", best_bid, bid_qty);
+                            print!("  Best Bid: ${best_bid:.2} (Qty: {bid_qty})");
                         } else {
                             print!("  Best Bid: None");
                         }
                         
                         if let Some(best_ask) = order_book.get_best_ask() {
                             let ask_qty = order_book.get_ask_quantity_at(best_ask);
-                            println!(" | Best Ask: ${:.2} (Qty: {})", best_ask, ask_qty);
+                            println!(" | Best Ask: ${best_ask:.2} (Qty: {ask_qty})");
                         } else {
                             println!(" | Best Ask: None");
                         }
@@ -141,7 +140,7 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                     Err(e) => {
-                        eprintln!("Failed to parse depth update: {}", e);
+                        eprintln!("Failed to parse depth update: {e}");
                     }
                 }
             }
@@ -154,7 +153,7 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                 break;
             }
             Err(e) => {
-                eprintln!("WebSocket error: {}", e);
+                eprintln!("WebSocket error: {e}");
                 break;
             }
             _ => {}
@@ -168,6 +167,6 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
 async fn main() {
     match handle_binance_stream().await {
         Ok(_) => println!("WebSocket client terminated successfully"),
-        Err(e) => eprintln!("WebSocket client error: {}", e),
+        Err(e) => eprintln!("WebSocket client error: {e}"),
     }
 }

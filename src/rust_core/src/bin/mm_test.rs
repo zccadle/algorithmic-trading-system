@@ -79,6 +79,7 @@ fn setup_market_data(binance: &mut MockExchange, coinbase: &mut MockExchange, kr
     kraken.get_order_book_mut().add_order(12, 45003.50, 8, false);   // Sell
 }
 
+#[allow(dead_code)]
 fn simulate_market_movement(exchange: &mut MockExchange, rng: &mut ThreadRng) {
     // Add some randomness to the market
     let price_change = rng.gen_range(-5.0..5.0);
@@ -129,11 +130,13 @@ fn main() {
     sor.add_exchange(Box::new(kraken), FeeSchedule::new(0.0002, 0.0012));
     
     // Create Market Maker with custom parameters
-    let mut params = MarketMakerParameters::default();
-    params.base_spread_bps = 20.0;        // 0.20% spread
-    params.base_quote_size = 0.5;         // 0.5 BTC per quote
-    params.target_base_inventory = 5.0;    // Target 5 BTC
-    params.inventory_skew_factor = 0.2;    // 20% skew adjustment
+    let params = MarketMakerParameters {
+        base_spread_bps: 20.0,        // 0.20% spread
+        base_quote_size: 0.5,         // 0.5 BTC per quote
+        target_base_inventory: 5.0,    // Target 5 BTC
+        inventory_skew_factor: 0.2,    // 20% skew adjustment
+        ..Default::default()
+    };
     
     let mut mm = MarketMaker::new(&sor, params);
     
@@ -241,7 +244,7 @@ fn main() {
     // Force inventory imbalance
     println!("\nSimulating large inventory imbalance...");
     if let Some(quotes) = mm.update_quotes() {
-        for i in 0..5 {
+        for _i in 0..5 {
             mm.on_quote_filled(&quotes.buy_quote, quotes.buy_quote.price, 100);  // Buy 1 BTC each time
         }
         

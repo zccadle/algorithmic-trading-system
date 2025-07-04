@@ -51,7 +51,7 @@ impl Exchange for MockExchange {
 }
 
 fn print_routing_decision(decision: &rust_core::smart_order_router::RoutingDecision, order_type: &str) {
-    println!("\n{} Routing Decision:", order_type);
+    println!("\n{order_type} Routing Decision:");
     println!("  Best Exchange: {}", decision.exchange_id);
     println!("  Expected Price: ${:.2}", decision.expected_price);
     println!(
@@ -145,7 +145,7 @@ fn main() {
         );
         total_cost += (split.expected_price * split.quantity as f64) + split.expected_fee;
     }
-    println!("   Total Cost: ${:.2}", total_cost);
+    println!("   Total Cost: ${total_cost:.2}");
 
     // Test 4: Show routing statistics
     sor.print_routing_stats();

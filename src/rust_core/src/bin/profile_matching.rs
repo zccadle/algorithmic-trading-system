@@ -8,13 +8,13 @@ fn main() {
     // Run the matching engine scenario many more times for profiling
     for i in 0..1000 {
         if i % 100 == 0 {
-            println!("Iteration {}/1000", i);
+            println!("Iteration {i}/1000");
         }
         run_matching_engine_scenario();
     }
     
     let duration = start.elapsed();
-    println!("Completed in {:?}", duration);
+    println!("Completed in {duration:?}");
 }
 
 fn run_matching_engine_scenario() {

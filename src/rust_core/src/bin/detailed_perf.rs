@@ -31,7 +31,7 @@ fn main() {
     print_stats("Matching Engine Scenario", &timings);
     
     // Test 3: Best price queries
-    let mut book = setup_book();
+    let book = setup_book();
     timings.clear();
     for _ in 0..10000 {
         let start = Instant::now();
@@ -98,12 +98,12 @@ fn print_stats(name: &str, timings: &[Duration]) {
     let p95 = sorted[sorted.len() * 95 / 100];
     let p99 = sorted[sorted.len() * 99 / 100];
     
-    println!("\n--- {} ---", name);
+    println!("\n--- {name} ---");
     println!("Samples: {}", timings.len());
-    println!("Average: {:?}", avg);
-    println!("Min: {:?}", min);
-    println!("Max: {:?}", max);
-    println!("P50: {:?}", p50);
-    println!("P95: {:?}", p95);
-    println!("P99: {:?}", p99);
+    println!("Average: {avg:?}");
+    println!("Min: {min:?}");
+    println!("Max: {max:?}");
+    println!("P50: {p50:?}");
+    println!("P95: {p95:?}");
+    println!("P99: {p99:?}");
 }
