@@ -1,6 +1,8 @@
 use futures_util::{SinkExt, StreamExt};
+use rust_core::order_book::OrderBook;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use tokio::net::TcpStream;
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message, MaybeTlsStream, WebSocketStream};
 
@@ -33,6 +35,15 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
     
     let (mut write, mut read) = ws_stream.split();
     
+    // Create OrderBook instance
+    let mut order_book = OrderBook::new();
+    let mut order_id: u32 = 1;
+    let mut update_count = 0;
+    
+    // Track orders at each price level for cancellation
+    let mut buy_orders: HashMap<String, Vec<u32>> = HashMap::new();
+    let mut sell_orders: HashMap<String, Vec<u32>> = HashMap::new();
+    
     // Process incoming messages
     while let Some(message) = read.next().await {
         match message {
@@ -40,21 +51,94 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                 // Parse the JSON message
                 match serde_json::from_str::<DepthUpdate>(&text) {
                     Ok(depth) => {
-                        // Extract and print best bid
-                        if let Some(best_bid) = depth.bids.first() {
-                            if best_bid.len() >= 2 {
-                                print!("Best Bid: ${} (Qty: {})", &best_bid[0], &best_bid[1]);
+                        update_count += 1;
+                        println!("=== Update #{} ===", update_count);
+                        
+                        // Process bids (buy orders)
+                        println!("Processing {} bid levels...", depth.bids.len());
+                        for bid in &depth.bids {
+                            if bid.len() >= 2 {
+                                let price = bid[0].parse::<f64>().unwrap_or(0.0);
+                                let quantity = bid[1].parse::<f64>().unwrap_or(0.0);
+                                
+                                if quantity > 0.0 && price > 0.0 {
+                                    // Cancel existing orders at this price level
+                                    let price_key = bid[0].clone();
+                                    if let Some(existing_orders) = buy_orders.get(&price_key) {
+                                        for &oid in existing_orders {
+                                            order_book.cancel_order(oid);
+                                        }
+                                    }
+                                    
+                                    // Add new order
+                                    let trades = order_book.add_order(order_id, price, quantity as u32, true);
+                                    
+                                    // Track the order
+                                    buy_orders.entry(price_key).or_insert(Vec::new()).clear();
+                                    buy_orders.get_mut(&bid[0]).unwrap().push(order_id);
+                                    
+                                    if !trades.is_empty() {
+                                        println!("  Generated {} trade(s) from bid @ ${}", trades.len(), price);
+                                    }
+                                    
+                                    order_id += 1;
+                                }
                             }
                         }
                         
-                        // Extract and print best ask
-                        if let Some(best_ask) = depth.asks.first() {
-                            if best_ask.len() >= 2 {
-                                print!(" | Best Ask: ${} (Qty: {})", &best_ask[0], &best_ask[1]);
+                        // Process asks (sell orders)
+                        println!("Processing {} ask levels...", depth.asks.len());
+                        for ask in &depth.asks {
+                            if ask.len() >= 2 {
+                                let price = ask[0].parse::<f64>().unwrap_or(0.0);
+                                let quantity = ask[1].parse::<f64>().unwrap_or(0.0);
+                                
+                                if quantity > 0.0 && price > 0.0 {
+                                    // Cancel existing orders at this price level
+                                    let price_key = ask[0].clone();
+                                    if let Some(existing_orders) = sell_orders.get(&price_key) {
+                                        for &oid in existing_orders {
+                                            order_book.cancel_order(oid);
+                                        }
+                                    }
+                                    
+                                    // Add new order
+                                    let trades = order_book.add_order(order_id, price, quantity as u32, false);
+                                    
+                                    // Track the order
+                                    sell_orders.entry(price_key).or_insert(Vec::new()).clear();
+                                    sell_orders.get_mut(&ask[0]).unwrap().push(order_id);
+                                    
+                                    if !trades.is_empty() {
+                                        println!("  Generated {} trade(s) from ask @ ${}", trades.len(), price);
+                                    }
+                                    
+                                    order_id += 1;
+                                }
                             }
                         }
                         
-                        println!();
+                        // Display current order book state
+                        println!("\nLocal Order Book State:");
+                        if let Some(best_bid) = order_book.get_best_bid() {
+                            let bid_qty = order_book.get_bid_quantity_at(best_bid);
+                            print!("  Best Bid: ${:.2} (Qty: {})", best_bid, bid_qty);
+                        } else {
+                            print!("  Best Bid: None");
+                        }
+                        
+                        if let Some(best_ask) = order_book.get_best_ask() {
+                            let ask_qty = order_book.get_ask_quantity_at(best_ask);
+                            println!(" | Best Ask: ${:.2} (Qty: {})", best_ask, ask_qty);
+                        } else {
+                            println!(" | Best Ask: None");
+                        }
+                        
+                        if let (Some(bid), Some(ask)) = (order_book.get_best_bid(), order_book.get_best_ask()) {
+                            println!("  Spread: ${:.2}\n", ask - bid);
+                        } else {
+                            println!("  Spread: N/A\n");
+                        }
                     }
                     Err(e) => {
                         eprintln!("Failed to parse depth update: {}", e);

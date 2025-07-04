@@ -8,6 +8,10 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <unordered_map>
+#include <vector>
+#include <iomanip>
+#include "order_book.h"
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -27,6 +31,11 @@ private:
     std::string port_;
     std::string target_;
     beast::flat_buffer buffer_;
+    OrderBook order_book_;
+    int next_order_id_;
+    int update_count_;
+    std::unordered_map<std::string, std::vector<int>> buy_orders_;  // price -> order_ids
+    std::unordered_map<std::string, std::vector<int>> sell_orders_; // price -> order_ids
     
 public:
     BinanceWebSocketClient(net::io_context& ioc)
@@ -36,7 +45,9 @@ public:
         , ws_(ioc, ssl_ctx_)
         , host_("stream.binance.com")
         , port_("9443")
-        , target_("/ws/btcusdt@depth") {
+        , target_("/ws/btcusdt@depth")
+        , next_order_id_(1)
+        , update_count_(0) {
         
         // Configure SSL
         ssl_ctx_.set_default_verify_paths();
@@ -80,6 +91,8 @@ public:
     }
     
     void read_loop() {
+        std::cout << std::fixed << std::setprecision(2);
+        
         while (true) {
             try {
                 // Read a message into our buffer
@@ -91,21 +104,113 @@ public:
                 // Parse JSON
                 json data = json::parse(message);
                 
-                // Extract and print best bid and ask
-                if (data.contains("b") && data["b"].is_array() && !data["b"].empty()) {
-                    auto best_bid = data["b"][0];
-                    if (best_bid.is_array() && best_bid.size() >= 2) {
-                        std::cout << "Best Bid: $" << best_bid[0].get<std::string>() 
-                                  << " (Qty: " << best_bid[1].get<std::string>() << ")";
+                update_count_++;
+                std::cout << "=== Update #" << update_count_ << " ===" << std::endl;
+                
+                // Process bids (buy orders)
+                if (data.contains("b") && data["b"].is_array()) {
+                    auto bids = data["b"];
+                    std::cout << "Processing " << bids.size() << " bid levels..." << std::endl;
+                    
+                    for (const auto& bid : bids) {
+                        if (bid.is_array() && bid.size() >= 2) {
+                            std::string price_str = bid[0].get<std::string>();
+                            std::string qty_str = bid[1].get<std::string>();
+                            
+                            double price = std::stod(price_str);
+                            double quantity = std::stod(qty_str);
+                            
+                            if (quantity > 0.0 && price > 0.0) {
+                                // Cancel existing orders at this price level
+                                if (buy_orders_.find(price_str) != buy_orders_.end()) {
+                                    for (int order_id : buy_orders_[price_str]) {
+                                        order_book_.cancel_order(order_id);
+                                    }
+                                    buy_orders_[price_str].clear();
+                                }
+                                
+                                // Add new order
+                                auto trades = order_book_.add_order(next_order_id_, price, 
+                                                                  static_cast<int>(quantity), true);
+                                
+                                // Track the order
+                                buy_orders_[price_str].push_back(next_order_id_);
+                                
+                                if (!trades.empty()) {
+                                    std::cout << "  Generated " << trades.size() 
+                                              << " trade(s) from bid @ $" << price << std::endl;
+                                }
+                                
+                                next_order_id_++;
+                            }
+                        }
                     }
                 }
                 
-                if (data.contains("a") && data["a"].is_array() && !data["a"].empty()) {
-                    auto best_ask = data["a"][0];
-                    if (best_ask.is_array() && best_ask.size() >= 2) {
-                        std::cout << " | Best Ask: $" << best_ask[0].get<std::string>()
-                                  << " (Qty: " << best_ask[1].get<std::string>() << ")";
+                // Process asks (sell orders)
+                if (data.contains("a") && data["a"].is_array()) {
+                    auto asks = data["a"];
+                    std::cout << "Processing " << asks.size() << " ask levels..." << std::endl;
+                    
+                    for (const auto& ask : asks) {
+                        if (ask.is_array() && ask.size() >= 2) {
+                            std::string price_str = ask[0].get<std::string>();
+                            std::string qty_str = ask[1].get<std::string>();
+                            
+                            double price = std::stod(price_str);
+                            double quantity = std::stod(qty_str);
+                            
+                            if (quantity > 0.0 && price > 0.0) {
+                                // Cancel existing orders at this price level
+                                if (sell_orders_.find(price_str) != sell_orders_.end()) {
+                                    for (int order_id : sell_orders_[price_str]) {
+                                        order_book_.cancel_order(order_id);
+                                    }
+                                    sell_orders_[price_str].clear();
+                                }
+                                
+                                // Add new order
+                                auto trades = order_book_.add_order(next_order_id_, price, 
+                                                                  static_cast<int>(quantity), false);
+                                
+                                // Track the order
+                                sell_orders_[price_str].push_back(next_order_id_);
+                                
+                                if (!trades.empty()) {
+                                    std::cout << "  Generated " << trades.size() 
+                                              << " trade(s) from ask @ $" << price << std::endl;
+                                }
+                                
+                                next_order_id_++;
+                            }
+                        }
                     }
+                }
+                
+                // Display current order book state
+                std::cout << "\nLocal Order Book State:" << std::endl;
+                double best_bid = order_book_.get_best_bid();
+                double best_ask = order_book_.get_best_ask();
+                
+                if (best_bid > -std::numeric_limits<double>::infinity()) {
+                    int bid_qty = order_book_.get_bid_quantity_at(best_bid);
+                    std::cout << "  Best Bid: $" << best_bid << " (Qty: " << bid_qty << ")";
+                } else {
+                    std::cout << "  Best Bid: None";
+                }
+                
+                if (best_ask < std::numeric_limits<double>::infinity()) {
+                    int ask_qty = order_book_.get_ask_quantity_at(best_ask);
+                    std::cout << " | Best Ask: $" << best_ask << " (Qty: " << ask_qty << ")" << std::endl;
+                } else {
+                    std::cout << " | Best Ask: None" << std::endl;
+                }
+                
+                if (best_bid > -std::numeric_limits<double>::infinity() && 
+                    best_ask < std::numeric_limits<double>::infinity()) {
+                    std::cout << "  Spread: $" << (best_ask - best_bid) << std::endl;
+                } else {
+                    std::cout << "  Spread: N/A" << std::endl;
                 }
                 
                 std::cout << std::endl;
