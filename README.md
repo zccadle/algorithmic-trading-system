@@ -39,7 +39,7 @@ See [docs/architecture.md](docs/architecture.md) for detailed system design.
 
 ## 📊 Performance Analysis
 
-See [PERFORMANCE.md](PERFORMANCE.md) for comprehensive benchmarks.
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for comprehensive benchmarks.
 
 ### Key Performance Metrics
 
