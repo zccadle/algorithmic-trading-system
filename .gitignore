@@ -40,3 +40,35 @@ build/
 # Rust Build Artifacts
 target/
 Cargo.lock
+
+# Profiling and Performance Test Outputs
+*_perf_results.txt
+*_profile.txt
+flamegraph.svg
+*.prof
+*.perf
+*.trace
+profile.d
+stacks.out
+perf.data
+perf.data.old
+cpu.prof
+
+# Temporary profiling binaries
+profile_matching
+detailed_perf
+
+# Market data files (if they contain sensitive data)
+market_data.csv
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.log
