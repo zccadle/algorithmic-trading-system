@@ -1,5 +1,4 @@
 use crate::order_book::OrderBook;
-use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
 
