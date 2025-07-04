@@ -75,5 +75,5 @@ cd src/rust_core && cargo bench --bench order_book_benchmark && cd ../..
 
 echo
 echo "=== Demo Complete ==="
-echo "See PERFORMANCE.md for detailed benchmark analysis"
+echo "See docs/PERFORMANCE.md for detailed benchmark analysis"
 echo "See docs/architecture.md for system design details"
