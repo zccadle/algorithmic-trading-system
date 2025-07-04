@@ -5,6 +5,14 @@ project(cpp_core)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable debug symbols in Release mode for profiling
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g")
+
+# For even better profiling, use frame pointers
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
+
 # Find OpenSSL
 find_package(OpenSSL REQUIRED)
 
@@ -90,3 +98,11 @@ target_link_libraries(sor_test smart_order_router order_book)
 # Create Market Maker test executable
 add_executable(mm_test src/mm_test.cpp)
 target_link_libraries(mm_test market_maker smart_order_router order_book)
+
+# Create profiling executable
+add_executable(profile_matching src/profile_matching.cpp)
+target_link_libraries(profile_matching order_book)
+
+# Create detailed performance analysis executable
+add_executable(detailed_perf src/detailed_perf.cpp)
+target_link_libraries(detailed_perf order_book)
