@@ -1,3 +1,8 @@
+// WARNING: This is a simple timing tool for debugging purposes only.
+// For accurate performance measurements, use ./order_book_benchmark instead.
+// This tool may produce misleading results due to lack of proper warmup,
+// statistical analysis, and outlier detection.
+
 #include "order_book.h"
 #include <iostream>
 #include <chrono>

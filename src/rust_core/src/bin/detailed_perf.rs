@@ -1,3 +1,8 @@
+// WARNING: This is a simple timing tool for debugging purposes only.
+// For accurate performance measurements, use `cargo bench` instead.
+// This tool may produce misleading results due to lack of proper warmup,
+// statistical analysis, and outlier detection.
+
 use rust_core::order_book::OrderBook;
 use std::time::{Duration, Instant};
 
