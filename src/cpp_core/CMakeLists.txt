@@ -14,6 +14,9 @@ include_directories(include)
 # Create order book library
 add_library(order_book src/order_book.cpp)
 
+# Create FIX parser library
+add_library(fix_parser src/fix_parser.cpp)
+
 # Create test executable
 add_executable(order_book_test src/main.cpp)
 target_link_libraries(order_book_test order_book)
@@ -58,6 +61,7 @@ target_link_libraries(replay_tool order_book)
 # Create websocket client executable
 add_executable(websocket_client src/websocket_client.cpp)
 target_link_libraries(websocket_client 
+    order_book
     Boost::beast 
     Boost::asio 
     Boost::system 
@@ -68,3 +72,7 @@ target_link_libraries(websocket_client
     pthread
 )
 target_include_directories(websocket_client PRIVATE ${OPENSSL_INCLUDE_DIR})
+
+# Create FIX test executable
+add_executable(fix_test src/fix_test.cpp)
+target_link_libraries(fix_test fix_parser order_book)
