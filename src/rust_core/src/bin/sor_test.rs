@@ -50,7 +50,10 @@ impl Exchange for MockExchange {
     }
 }
 
-fn print_routing_decision(decision: &rust_core::smart_order_router::RoutingDecision, order_type: &str) {
+fn print_routing_decision(
+    decision: &rust_core::smart_order_router::RoutingDecision,
+    order_type: &str,
+) {
     println!("\n{order_type} Routing Decision:");
     println!("  Best Exchange: {}", decision.exchange_id);
     println!("  Expected Price: ${:.2}", decision.expected_price);
@@ -89,33 +92,51 @@ fn main() {
     println!("\n1. Setting up mock order books...");
 
     // Binance: Tight spread, high liquidity
-    binance.get_order_book_mut().add_order(1, 45000.00, 10, true);  // Buy
-    binance.get_order_book_mut().add_order(2, 44999.50, 5, true);   // Buy
-    binance.get_order_book_mut().add_order(3, 45001.00, 8, false);  // Sell
-    binance.get_order_book_mut().add_order(4, 45001.50, 12, false); // Sell
+    binance
+        .get_order_book_mut()
+        .add_order(1, 45000.00, 10, true); // Buy
+    binance.get_order_book_mut().add_order(2, 44999.50, 5, true); // Buy
+    binance
+        .get_order_book_mut()
+        .add_order(3, 45001.00, 8, false); // Sell
+    binance
+        .get_order_book_mut()
+        .add_order(4, 45001.50, 12, false); // Sell
     println!("  Binance: Bid $45000.00, Ask $45001.00 (Spread: $1.00)");
 
     // Coinbase: Wider spread, medium liquidity
-    coinbase.get_order_book_mut().add_order(5, 44999.00, 7, true);  // Buy
-    coinbase.get_order_book_mut().add_order(6, 44998.00, 3, true);  // Buy
-    coinbase.get_order_book_mut().add_order(7, 45002.00, 6, false); // Sell
-    coinbase.get_order_book_mut().add_order(8, 45003.00, 9, false); // Sell
+    coinbase
+        .get_order_book_mut()
+        .add_order(5, 44999.00, 7, true); // Buy
+    coinbase
+        .get_order_book_mut()
+        .add_order(6, 44998.00, 3, true); // Buy
+    coinbase
+        .get_order_book_mut()
+        .add_order(7, 45002.00, 6, false); // Sell
+    coinbase
+        .get_order_book_mut()
+        .add_order(8, 45003.00, 9, false); // Sell
     println!("  Coinbase: Bid $44999.00, Ask $45002.00 (Spread: $3.00)");
 
     // Kraken: Best bid, higher ask
-    kraken.get_order_book_mut().add_order(9, 45000.50, 15, true);   // Buy (best bid)
-    kraken.get_order_book_mut().add_order(10, 45000.00, 5, true);   // Buy
-    kraken.get_order_book_mut().add_order(11, 45002.50, 10, false); // Sell
-    kraken.get_order_book_mut().add_order(12, 45003.50, 8, false);  // Sell
+    kraken.get_order_book_mut().add_order(9, 45000.50, 15, true); // Buy (best bid)
+    kraken.get_order_book_mut().add_order(10, 45000.00, 5, true); // Buy
+    kraken
+        .get_order_book_mut()
+        .add_order(11, 45002.50, 10, false); // Sell
+    kraken
+        .get_order_book_mut()
+        .add_order(12, 45003.50, 8, false); // Sell
     println!("  Kraken: Bid $45000.50, Ask $45002.50 (Spread: $2.00)");
 
     // Create Smart Order Router
     let mut sor = SmartOrderRouter::new(true, true); // Consider both latency and fees
 
     // Add exchanges with different fee structures
-    sor.add_exchange(Box::new(binance), FeeSchedule::new(0.0010, 0.0010));   // 0.10% maker/taker
-    sor.add_exchange(Box::new(coinbase), FeeSchedule::new(0.0005, 0.0015));  // 0.05% maker, 0.15% taker
-    sor.add_exchange(Box::new(kraken), FeeSchedule::new(0.0002, 0.0012));    // 0.02% maker, 0.12% taker
+    sor.add_exchange(Box::new(binance), FeeSchedule::new(0.0010, 0.0010)); // 0.10% maker/taker
+    sor.add_exchange(Box::new(coinbase), FeeSchedule::new(0.0005, 0.0015)); // 0.05% maker, 0.15% taker
+    sor.add_exchange(Box::new(kraken), FeeSchedule::new(0.0002, 0.0012)); // 0.02% maker, 0.12% taker
 
     // Test 1: Route a market buy order
     println!("\n2. Testing Buy Order Routing");
@@ -182,12 +203,24 @@ fn main() {
     );
 
     // Same order books
-    binance2.get_order_book_mut().add_order(1, 45000.00, 10, true);
-    binance2.get_order_book_mut().add_order(3, 45001.00, 8, false);
-    coinbase2.get_order_book_mut().add_order(5, 44999.00, 7, true);
-    coinbase2.get_order_book_mut().add_order(7, 45002.00, 6, false);
-    kraken2.get_order_book_mut().add_order(9, 45000.50, 15, true);
-    kraken2.get_order_book_mut().add_order(11, 45002.50, 10, false);
+    binance2
+        .get_order_book_mut()
+        .add_order(1, 45000.00, 10, true);
+    binance2
+        .get_order_book_mut()
+        .add_order(3, 45001.00, 8, false);
+    coinbase2
+        .get_order_book_mut()
+        .add_order(5, 44999.00, 7, true);
+    coinbase2
+        .get_order_book_mut()
+        .add_order(7, 45002.00, 6, false);
+    kraken2
+        .get_order_book_mut()
+        .add_order(9, 45000.50, 15, true);
+    kraken2
+        .get_order_book_mut()
+        .add_order(11, 45002.50, 10, false);
 
     sor_no_fees.add_exchange(Box::new(binance2), FeeSchedule::new(0.0010, 0.0010));
     sor_no_fees.add_exchange(Box::new(coinbase2), FeeSchedule::new(0.0005, 0.0015));

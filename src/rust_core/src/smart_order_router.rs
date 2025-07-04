@@ -25,8 +25,8 @@ impl fmt::Display for ExchangeID {
 
 #[derive(Debug, Clone)]
 pub struct FeeSchedule {
-    pub maker_fee: f64,  // Fee as percentage (e.g., 0.001 = 0.1%)
-    pub taker_fee: f64,  // Fee as percentage
+    pub maker_fee: f64, // Fee as percentage (e.g., 0.001 = 0.1%)
+    pub taker_fee: f64, // Fee as percentage
 }
 
 impl FeeSchedule {
@@ -52,7 +52,7 @@ pub struct RoutingDecision {
     pub exchange_id: ExchangeID,
     pub expected_price: f64,
     pub expected_fee: f64,
-    pub total_cost: f64,  // For buys: price + fee, For sells: price - fee
+    pub total_cost: f64, // For buys: price + fee, For sells: price - fee
     pub available_quantity: u32,
     pub is_maker: bool,
 }
@@ -73,8 +73,8 @@ impl Default for RoutingDecision {
 #[derive(Debug, Clone)]
 pub struct ExchangeMetrics {
     pub avg_latency: Duration,
-    pub fill_rate: f64,   // Percentage of orders that get filled
-    pub uptime: f64,      // Percentage uptime over last 24h
+    pub fill_rate: f64, // Percentage of orders that get filled
+    pub uptime: f64,    // Percentage uptime over last 24h
 }
 
 impl ExchangeMetrics {
@@ -145,14 +145,14 @@ impl SmartOrderRouter {
     fn calculate_buy_cost(&self, price: f64, quantity: u32, fee_rate: f64) -> f64 {
         let notional = price * quantity as f64;
         let fee = notional * fee_rate;
-        notional + fee  // Total cost including fees
+        notional + fee // Total cost including fees
     }
 
     // Calculate the effective proceeds for a sell order
     fn calculate_sell_proceeds(&self, price: f64, quantity: u32, fee_rate: f64) -> f64 {
         let notional = price * quantity as f64;
         let fee = notional * fee_rate;
-        notional - fee  // Net proceeds after fees
+        notional - fee // Net proceeds after fees
     }
 
     // Check if this would be a maker or taker order
@@ -172,7 +172,13 @@ impl SmartOrderRouter {
         }
     }
 
-    pub fn route_order(&self, _order_id: u32, price: f64, quantity: u32, is_buy_side: bool) -> RoutingDecision {
+    pub fn route_order(
+        &self,
+        _order_id: u32,
+        price: f64,
+        quantity: u32,
+        is_buy_side: bool,
+    ) -> RoutingDecision {
         let mut best_decision = RoutingDecision::default();
 
         if is_buy_side {
@@ -339,7 +345,13 @@ impl SmartOrderRouter {
         data
     }
 
-    pub fn route_order_split(&self, order_id: u32, price: f64, mut total_quantity: u32, is_buy_side: bool) -> Vec<SplitOrder> {
+    pub fn route_order_split(
+        &self,
+        order_id: u32,
+        price: f64,
+        mut total_quantity: u32,
+        is_buy_side: bool,
+    ) -> Vec<SplitOrder> {
         let mut splits = Vec::new();
 
         // Keep routing portions until all quantity is allocated
@@ -347,7 +359,7 @@ impl SmartOrderRouter {
             let decision = self.route_order(order_id, price, total_quantity, is_buy_side);
 
             if decision.exchange_id == ExchangeID::Unknown {
-                break;  // No more liquidity available
+                break; // No more liquidity available
             }
 
             let fill_quantity = total_quantity.min(decision.available_quantity);
@@ -356,7 +368,8 @@ impl SmartOrderRouter {
                 exchange_id: decision.exchange_id,
                 quantity: fill_quantity,
                 expected_price: decision.expected_price,
-                expected_fee: decision.expected_fee * fill_quantity as f64 / decision.available_quantity as f64,
+                expected_fee: decision.expected_fee * fill_quantity as f64
+                    / decision.available_quantity as f64,
             });
 
             total_quantity -= fill_quantity;
@@ -391,7 +404,11 @@ impl SmartOrderRouter {
                 "\n{} (ID: {:?}) - {}",
                 exchange.get_name(),
                 exchange.get_id(),
-                if exchange_info.is_active { "ACTIVE" } else { "INACTIVE" }
+                if exchange_info.is_active {
+                    "ACTIVE"
+                } else {
+                    "INACTIVE"
+                }
             );
 
             print!("  Best Bid: ");

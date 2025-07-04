@@ -24,25 +24,25 @@ struct DepthUpdate {
 async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
     // Binance WebSocket endpoint for BTC/USDT depth updates
     let url = "wss://stream.binance.com:9443/ws/btcusdt@depth";
-    
+
     println!("Connecting to Binance WebSocket stream: {url}");
-    
+
     // Connect to the WebSocket
     let (ws_stream, _) = connect_async(url).await?;
     println!("Connected to Binance WebSocket stream: /ws/btcusdt@depth");
     println!("Listening for BTC/USDT depth updates...\n");
-    
+
     let (mut write, mut read) = ws_stream.split();
-    
+
     // Create OrderBook instance
     let mut order_book = OrderBook::new();
     let mut order_id: u32 = 1;
     let mut update_count = 0;
-    
+
     // Track orders at each price level for cancellation
     let mut buy_orders: HashMap<String, Vec<u32>> = HashMap::new();
     let mut sell_orders: HashMap<String, Vec<u32>> = HashMap::new();
-    
+
     // Process incoming messages
     while let Some(message) = read.next().await {
         match message {
@@ -52,14 +52,14 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(depth) => {
                         update_count += 1;
                         println!("=== Update #{update_count} ===");
-                        
+
                         // Process bids (buy orders)
                         println!("Processing {} bid levels...", depth.bids.len());
                         for bid in &depth.bids {
                             if bid.len() >= 2 {
                                 let price = bid[0].parse::<f64>().unwrap_or(0.0);
                                 let quantity = bid[1].parse::<f64>().unwrap_or(0.0);
-                                
+
                                 if quantity > 0.0 && price > 0.0 {
                                     // Cancel existing orders at this price level
                                     let price_key = bid[0].clone();
@@ -68,30 +68,38 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                                             order_book.cancel_order(oid);
                                         }
                                     }
-                                    
+
                                     // Add new order
-                                    let trades = order_book.add_order(order_id, price, quantity as u32, true);
-                                    
+                                    let trades = order_book.add_order(
+                                        order_id,
+                                        price,
+                                        quantity as u32,
+                                        true,
+                                    );
+
                                     // Track the order
                                     buy_orders.entry(price_key).or_default().clear();
                                     buy_orders.get_mut(&bid[0]).unwrap().push(order_id);
-                                    
+
                                     if !trades.is_empty() {
-                                        println!("  Generated {} trade(s) from bid @ ${price}", trades.len());
+                                        println!(
+                                            "  Generated {} trade(s) from bid @ ${price}",
+                                            trades.len()
+                                        );
                                     }
-                                    
+
                                     order_id += 1;
                                 }
                             }
                         }
-                        
+
                         // Process asks (sell orders)
                         println!("Processing {} ask levels...", depth.asks.len());
                         for ask in &depth.asks {
                             if ask.len() >= 2 {
                                 let price = ask[0].parse::<f64>().unwrap_or(0.0);
                                 let quantity = ask[1].parse::<f64>().unwrap_or(0.0);
-                                
+
                                 if quantity > 0.0 && price > 0.0 {
                                     // Cancel existing orders at this price level
                                     let price_key = ask[0].clone();
@@ -100,23 +108,31 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                                             order_book.cancel_order(oid);
                                         }
                                     }
-                                    
+
                                     // Add new order
-                                    let trades = order_book.add_order(order_id, price, quantity as u32, false);
-                                    
+                                    let trades = order_book.add_order(
+                                        order_id,
+                                        price,
+                                        quantity as u32,
+                                        false,
+                                    );
+
                                     // Track the order
                                     sell_orders.entry(price_key).or_default().clear();
                                     sell_orders.get_mut(&ask[0]).unwrap().push(order_id);
-                                    
+
                                     if !trades.is_empty() {
-                                        println!("  Generated {} trade(s) from ask @ ${price}", trades.len());
+                                        println!(
+                                            "  Generated {} trade(s) from ask @ ${price}",
+                                            trades.len()
+                                        );
                                     }
-                                    
+
                                     order_id += 1;
                                 }
                             }
                         }
-                        
+
                         // Display current order book state
                         println!("\nLocal Order Book State:");
                         if let Some(best_bid) = order_book.get_best_bid() {
@@ -125,15 +141,17 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
                         } else {
                             print!("  Best Bid: None");
                         }
-                        
+
                         if let Some(best_ask) = order_book.get_best_ask() {
                             let ask_qty = order_book.get_ask_quantity_at(best_ask);
                             println!(" | Best Ask: ${best_ask:.2} (Qty: {ask_qty})");
                         } else {
                             println!(" | Best Ask: None");
                         }
-                        
-                        if let (Some(bid), Some(ask)) = (order_book.get_best_bid(), order_book.get_best_ask()) {
+
+                        if let (Some(bid), Some(ask)) =
+                            (order_book.get_best_bid(), order_book.get_best_ask())
+                        {
                             println!("  Spread: ${:.2}\n", ask - bid);
                         } else {
                             println!("  Spread: N/A\n");
@@ -159,7 +177,7 @@ async fn handle_binance_stream() -> Result<(), Box<dyn std::error::Error>> {
             _ => {}
         }
     }
-    
+
     Ok(())
 }
 

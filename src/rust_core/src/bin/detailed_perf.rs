@@ -3,12 +3,12 @@ use std::time::{Duration, Instant};
 
 fn main() {
     println!("=== Rust Detailed Performance Analysis ===\n");
-    
+
     // Warm up
     for _ in 0..10 {
         run_matching_engine_scenario();
     }
-    
+
     // Test 1: Order insertion performance
     let mut timings = Vec::new();
     for _ in 0..100 {
@@ -20,7 +20,7 @@ fn main() {
         timings.push(start.elapsed());
     }
     print_stats("Order Insertion (1000 orders)", &timings);
-    
+
     // Test 2: Matching engine performance
     timings.clear();
     for _ in 0..100 {
@@ -29,7 +29,7 @@ fn main() {
         timings.push(start.elapsed());
     }
     print_stats("Matching Engine Scenario", &timings);
-    
+
     // Test 3: Best price queries
     let book = setup_book();
     timings.clear();
@@ -40,7 +40,7 @@ fn main() {
         timings.push(start.elapsed());
     }
     print_stats("Best Price Queries", &timings);
-    
+
     // Test 4: Memory allocation patterns
     println!("\n--- Memory Allocation Test ---");
     let start = Instant::now();
@@ -52,8 +52,11 @@ fn main() {
         }
         books.push(book);
     }
-    println!("Created 100 order books with 100 orders each in {:?}", start.elapsed());
-    
+    println!(
+        "Created 100 order books with 100 orders each in {:?}",
+        start.elapsed()
+    );
+
     // Force deallocation
     let start = Instant::now();
     drop(books);
@@ -71,13 +74,13 @@ fn setup_book() -> OrderBook {
 
 fn run_matching_engine_scenario() {
     let mut book = OrderBook::new();
-    
+
     // Add initial orders
     for i in 0..10 {
         book.add_order(i * 2, 100.0 + i as f64, 100, true);
         book.add_order(i * 2 + 1, 110.0 + i as f64, 100, false);
     }
-    
+
     // Add crossing orders
     for i in 0..50 {
         let _ = book.add_order(1000 + i, 109.0, 50, true);
@@ -90,14 +93,14 @@ fn print_stats(name: &str, timings: &[Duration]) {
     let avg = sum / timings.len() as u32;
     let min = timings.iter().min().unwrap();
     let max = timings.iter().max().unwrap();
-    
+
     // Calculate percentiles
     let mut sorted = timings.to_vec();
     sorted.sort();
     let p50 = sorted[sorted.len() / 2];
     let p95 = sorted[sorted.len() * 95 / 100];
     let p99 = sorted[sorted.len() * 99 / 100];
-    
+
     println!("\n--- {name} ---");
     println!("Samples: {}", timings.len());
     println!("Average: {avg:?}");
