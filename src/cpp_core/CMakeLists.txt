@@ -5,6 +5,9 @@ project(cpp_core)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Find OpenSSL
+find_package(OpenSSL REQUIRED)
+
 # Include directories
 include_directories(include)
 
@@ -25,6 +28,25 @@ FetchContent_Declare(
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(benchmark)
 
+# Fetch Boost (Beast and Asio)
+FetchContent_Declare(
+    Boost
+    URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
+    URL_HASH SHA256=2e64e5d79a738d0fa6fb546c6e5c2bd28f88d268a2a080546f74e5ff98f29d0e
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+set(BOOST_INCLUDE_LIBRARIES beast asio system thread)
+set(BOOST_ENABLE_CMAKE ON)
+FetchContent_MakeAvailable(Boost)
+
+# Fetch nlohmann/json
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+)
+FetchContent_MakeAvailable(json)
+
 # Create benchmark executable
 add_executable(order_book_benchmark src/order_book_benchmark.cpp)
 target_link_libraries(order_book_benchmark order_book benchmark::benchmark)
@@ -32,3 +54,17 @@ target_link_libraries(order_book_benchmark order_book benchmark::benchmark)
 # Create replay tool executable
 add_executable(replay_tool src/replay_tool.cpp)
 target_link_libraries(replay_tool order_book)
+
+# Create websocket client executable
+add_executable(websocket_client src/websocket_client.cpp)
+target_link_libraries(websocket_client 
+    Boost::beast 
+    Boost::asio 
+    Boost::system 
+    Boost::thread
+    nlohmann_json::nlohmann_json
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    pthread
+)
+target_include_directories(websocket_client PRIVATE ${OPENSSL_INCLUDE_DIR})
