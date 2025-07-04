@@ -142,12 +142,12 @@ jobs:
     - name: Run C++ benchmarks
       run: |
         cd src/cpp_core/build
-        ./matching_benchmark --benchmark_format=json > cpp_bench_results.json
+        ./order_book_benchmark --benchmark_format=json > cpp_bench_results.json
 
     - name: Run Rust benchmarks
       run: |
         cd src/rust_core
-        cargo bench --bench order_book_benchmark -- --output-format bencher > rust_bench_results.txt
+        cargo bench --bench order_book_benchmark 2>&1 | tee rust_bench_results.txt
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v4
