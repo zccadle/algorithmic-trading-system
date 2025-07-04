@@ -17,6 +17,9 @@ add_library(order_book src/order_book.cpp)
 # Create FIX parser library
 add_library(fix_parser src/fix_parser.cpp)
 
+# Create Smart Order Router library
+add_library(smart_order_router src/smart_order_router.cpp)
+
 # Create test executable
 add_executable(order_book_test src/main.cpp)
 target_link_libraries(order_book_test order_book)
@@ -76,3 +79,7 @@ target_include_directories(websocket_client PRIVATE ${OPENSSL_INCLUDE_DIR})
 # Create FIX test executable
 add_executable(fix_test src/fix_test.cpp)
 target_link_libraries(fix_test fix_parser order_book)
+
+# Create SOR test executable
+add_executable(sor_test src/sor_test.cpp)
+target_link_libraries(sor_test smart_order_router order_book)
