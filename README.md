@@ -18,13 +18,17 @@ A critical data structure that maintains a live, real-time view of all open buy 
 
 The logic that consumes orders from the book and generates trades when a buy order's price crosses a sell order's price. This logic is integrated directly into the `add_order` method of the `OrderBook`.
 
+### 3. Market Data Replay Tool
+
+A command-line application that simulates a live market feed by reading a sequence of orders from a CSV file and processing them through the matching engine. This allows for end-to-end system performance testing.
+
 ## Performance Benchmark Analysis
 
 To provide a quantitative comparison, a benchmarking suite was developed using Google Benchmark for C++ and Criterion for Rust. Both implementations were tasked with identical workloads on the same machine.
 
-### Benchmark Results
+### Micro-Benchmark Results (Algorithmic Performance)
 
-The following table summarizes the mean time taken for each core operation after the implementation of the matching engine.
+The following table summarizes the mean time taken for core in-memory operations after the implementation of the matching engine. This test focuses on pure, CPU-bound algorithmic efficiency.
 
 | Benchmark Scenario | Rust Time (µs) | C++ Time (µs) | Winner | Performance Difference |
 |-------------------|----------------|---------------|--------|----------------------|
@@ -35,14 +39,21 @@ The following table summarizes the mean time taken for each core operation after
 
 *(Tests run on Apple M1 Pro, results are indicative)*
 
-### Analysis
+### End-to-End Replay Performance (System Performance)
 
-With the addition of the complex, stateful logic required for the matching engine, the performance characteristics shifted significantly in favor of the C++ implementation.
+The replay tool measures the total time taken to process a sequence of 15 orders from a CSV file, including file I/O, data parsing, and execution through the matching engine.
 
-**Complex Logic Performance**: The C++ version demonstrated superior performance in all tests, especially the matching-intensive one. This is likely due to several factors:
+| Replay Tool | Total Processing Time |
+|-------------|--------------------|
+| C++ | 283 µs |
+| Rust | 83 µs |
 
-- **Direct Memory/Iterator Manipulation**: C++ allows for more direct, albeit less safe, manipulation of map iterators within loops, which can be highly optimized by the compiler.
+## Final Project Analysis
 
-- **Borrow Checker Overhead**: The Rust implementation, while guaranteeing memory safety, requires more careful handling of ownership and borrowing. To satisfy the borrow checker in the matching loop, it was necessary to collect price keys into a temporary `Vec` before iterating, which introduces a degree of overhead not present in the C++ version.
+This project reveals a crucial distinction between algorithmic performance and overall system performance.
 
-**The Safety vs. Performance Trade-off**: This project clearly demonstrates the core trade-off between modern C++ and Rust. Rust provides compile-time guarantees against entire classes of bugs (like dangling pointers or data races), but achieving the absolute peak performance for complex algorithms can sometimes require more intricate code to work with the borrow checker. C++ provides raw power and control, which can yield faster code in complex scenarios, at the cost of requiring more discipline from the developer to ensure safety.
+**CPU-Bound Performance**: In the isolated micro-benchmarks, the C++ implementation was significantly faster. This is primarily due to C++'s ability to perform direct, in-place manipulation of data structures within complex loops. The Rust version, while guaranteeing memory safety, required a safer but less direct implementation pattern (collecting keys before iteration) to satisfy the borrow checker, which introduced measurable overhead.
+
+**System-Level Performance**: In the end-to-end replay test, which includes file I/O and data parsing, the Rust implementation was ~3.4x faster. This highlights the strength and efficiency of Rust's modern ecosystem, particularly its highly optimized libraries for common tasks like CSV parsing and file handling.
+
+**Conclusion**: Both C++ and Rust are elite languages for high-performance systems. This project demonstrates that C++ can offer a more direct path to raw performance in complex, CPU-bound algorithms, while Rust's safety guarantees and modern ecosystem can lead to extremely robust and performant systems when considering the entire application lifecycle. The choice between them depends on the specific trade-offs a team is willing to make between raw algorithmic speed, provable safety, and ecosystem maturity.
