@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cpp-build-and-test:
+    name: C++ Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: [gcc, clang]
+        exclude:
+          - os: macos-latest
+            compiler: gcc
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake libboost-all-dev
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install cmake boost
+
+    - name: Configure CMake
+      run: |
+        cd trading_system/src/cpp_core
+        mkdir build && cd build
+        if [ "${{ matrix.compiler }}" == "clang" ]; then
+          export CC=clang
+          export CXX=clang++
+        fi
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: |
+        cd trading_system/src/cpp_core/build
+        make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+
+    - name: Run tests
+      run: |
+        cd trading_system/src/cpp_core/build
+        ./orderbook_test
+        ./fix_test
+        ./sor_test
+        ./mm_test
+
+  rust-build-and-test:
+    name: Rust Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable, nightly]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        override: true
+        components: rustfmt, clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache cargo index
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build
+      run: |
+        cd trading_system/src/rust_core
+        cargo build --release --verbose
+
+    - name: Run tests
+      run: |
+        cd trading_system/src/rust_core
+        cargo test --verbose
+
+    - name: Run clippy
+      run: |
+        cd trading_system/src/rust_core
+        cargo clippy -- -D warnings
+
+    - name: Check formatting
+      run: |
+        cd trading_system/src/rust_core
+        cargo fmt -- --check
+
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: [cpp-build-and-test, rust-build-and-test]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake libboost-all-dev
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Build C++ benchmarks
+      run: |
+        cd trading_system/src/cpp_core
+        mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        make -j$(nproc)
+
+    - name: Build Rust benchmarks
+      run: |
+        cd trading_system/src/rust_core
+        cargo build --release
+
+    - name: Run C++ benchmarks
+      run: |
+        cd trading_system/src/cpp_core/build
+        ./matching_benchmark --benchmark_format=json > cpp_bench_results.json
+
+    - name: Run Rust benchmarks
+      run: |
+        cd trading_system/src/rust_core
+        cargo bench --bench order_book_benchmark -- --output-format bencher > rust_bench_results.txt
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: |
+          trading_system/src/cpp_core/build/cpp_bench_results.json
+          trading_system/src/rust_core/rust_bench_results.txt
