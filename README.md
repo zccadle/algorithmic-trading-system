@@ -122,8 +122,8 @@ trading_system/
 │       ├── benches/       # Criterion benchmarks
 │       └── examples/      # Example applications
 ├── docs/
-│   └── architecture.md    # System design documentation
-├── PERFORMANCE.md         # Performance analysis report
+│   ├── architecture.md    # System design documentation
+│   └── PERFORMANCE.md     # Performance analysis report
 └── README.md             # This file
 ```
 
@@ -185,4 +185,4 @@ This project is available under the MIT License. See LICENSE file for details.
 
 ---
 
-*This project demonstrates production-grade trading system development with a focus on performance, reliability, and maintainability. For questions or discussions about the implementation, please open an issue.*
+*This project demonstrates production-grade trading system development with a focus on performance, reliability, and maintainability. For questions or discussions about the implementation, please open an issue or email donlee778@gmail.com.*
