@@ -20,6 +20,9 @@ add_library(fix_parser src/fix_parser.cpp)
 # Create Smart Order Router library
 add_library(smart_order_router src/smart_order_router.cpp)
 
+# Create Market Maker library
+add_library(market_maker src/market_maker.cpp)
+
 # Create test executable
 add_executable(order_book_test src/main.cpp)
 target_link_libraries(order_book_test order_book)
@@ -83,3 +86,7 @@ target_link_libraries(fix_test fix_parser order_book)
 # Create SOR test executable
 add_executable(sor_test src/sor_test.cpp)
 target_link_libraries(sor_test smart_order_router order_book)
+
+# Create Market Maker test executable
+add_executable(mm_test src/mm_test.cpp)
+target_link_libraries(mm_test market_maker smart_order_router order_book)
