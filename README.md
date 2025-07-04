@@ -1,59 +1,188 @@
 # High-Performance Algorithmic Trading System
 
-This project is an exploration into building the core components of a high-performance algorithmic trading system. It features parallel implementations in both C++ and Rust to analyze and compare their performance, safety, and design patterns in a low-latency context.
+A comprehensive trading system implementation featuring parallel architectures in C++ and Rust, designed to showcase modern systems programming techniques for ultra-low latency financial applications.
 
-## Core Components
+## Project Overview
 
-The system is architected around several key components.
+This project implements a complete trading system core with industry-standard components, providing a detailed comparison of C++ and Rust for high-frequency trading applications. The dual implementation approach offers unique insights into the trade-offs between performance, safety, and development velocity in systems programming.
 
-### 1. In-Memory Order Book
+## 🏗️ Architecture
 
-A critical data structure that maintains a live, real-time view of all open buy and sell orders for a given instrument.
+See [docs/architecture.md](docs/architecture.md) for detailed system design.
 
-- **C++ Implementation (`cpp_core`)**: A modern C++17 implementation using `std::map` for sorted price levels and `std::unique_ptr` for memory management.
+### Core Components
 
-- **Rust Implementation (`rust_core`)**: An idiomatic Rust implementation using `BTreeMap` for sorted levels and leveraging Rust's ownership model for memory safety.
+#### 1. **Order Book & Matching Engine**
+- Price-time priority order book with O(log n) operations
+- Integrated matching engine supporting market and limit orders
+- Sub-microsecond best bid/ask queries
 
-### 2. Matching Engine
+#### 2. **Smart Order Router (SOR)**
+- Multi-exchange order routing with intelligent order splitting
+- Fee-aware routing optimization
+- Latency-based failover mechanisms
 
-The logic that consumes orders from the book and generates trades when a buy order's price crosses a sell order's price. This logic is integrated directly into the `add_order` method of the `OrderBook`.
+#### 3. **FIX Protocol Gateway**
+- FIX 4.4 protocol parser and message handler
+- Support for NewOrderSingle and OrderCancelRequest
+- Integration with order book for seamless order flow
 
-### 3. Market Data Replay Tool
+#### 4. **Market Making Strategy**
+- Automated liquidity provision with inventory management
+- Dynamic spread adjustment based on market volatility
+- Risk-aware position limits
 
-A command-line application that simulates a live market feed by reading a sequence of orders from a CSV file and processing them through the matching engine. This allows for end-to-end system performance testing.
+#### 5. **WebSocket Client**
+- Real-time market data streaming
+- Binary and text protocol support
+- Async I/O for scalable connections
 
-## Performance Benchmark Analysis
+## 📊 Performance Analysis
 
-To provide a quantitative comparison, a benchmarking suite was developed using Google Benchmark for C++ and Criterion for Rust. Both implementations were tasked with identical workloads on the same machine.
+See [PERFORMANCE.md](PERFORMANCE.md) for comprehensive benchmarks.
 
-### Micro-Benchmark Results (Algorithmic Performance)
+### Key Performance Metrics
 
-The following table summarizes the mean time taken for core in-memory operations after the implementation of the matching engine. This test focuses on pure, CPU-bound algorithmic efficiency.
+| Operation | C++ | Rust | C++ Advantage |
+|-----------|-----|------|---------------|
+| Order Insertion (1K orders) | 106.6 µs | 164.8 µs | 1.55x |
+| Matching Engine | 8.84 µs | 17.50 µs | 1.98x |
+| Best Price Query | 26 ns | 26 ns | 1.00x |
 
-| Benchmark Scenario | Rust Time (µs) | C++ Time (µs) | Winner | Performance Difference |
-|-------------------|----------------|---------------|--------|----------------------|
-| Matching Engine | ~401 µs | ~105 µs | C++ | C++ is ~3.8x faster |
-| Add 10k Orders | ~5,433 µs | ~1,588 µs | C++ | C++ is ~3.4x faster |
-| Mixed Operations | ~4,153 µs | ~1,539 µs | C++ | C++ is ~2.7x faster |
-| Best Price Queries | ~1.72 µs | ~1.16 µs | C++ | C++ is ~1.5x faster |
+The C++ implementation achieves 1.5-2x better performance for CPU-bound operations due to its ability to perform in-place modifications of data structures, while Rust's safety guarantees require additional allocations in certain scenarios.
 
-*(Tests run on Apple M1 Pro, results are indicative)*
+## 🚀 Getting Started
 
-### End-to-End Replay Performance (System Performance)
+### Prerequisites
 
-The replay tool measures the total time taken to process a sequence of 15 orders from a CSV file, including file I/O, data parsing, and execution through the matching engine.
+- **C++ Build**: CMake 3.10+, C++17 compiler (GCC 7+, Clang 5+, MSVC 2017+)
+- **Rust Build**: Rust 1.70+ (install via [rustup](https://rustup.rs/))
+- **Dependencies**: Boost 1.70+ (for C++ WebSocket support)
 
-| Replay Tool | Total Processing Time |
-|-------------|--------------------|
-| C++ | 283 µs |
-| Rust | 83 µs |
+### Building the Project
 
-## Final Project Analysis
+#### C++ Components
+```bash
+cd trading_system/src/cpp_core
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+```
 
-This project reveals a crucial distinction between algorithmic performance and overall system performance.
+#### Rust Components
+```bash
+cd trading_system/src/rust_core
+cargo build --release
+```
 
-**CPU-Bound Performance**: In the isolated micro-benchmarks, the C++ implementation was significantly faster. This is primarily due to C++'s ability to perform direct, in-place manipulation of data structures within complex loops. The Rust version, while guaranteeing memory safety, required a safer but less direct implementation pattern (collecting keys before iteration) to satisfy the borrow checker, which introduced measurable overhead.
+### Running Tests
 
-**System-Level Performance**: In the end-to-end replay test, which includes file I/O and data parsing, the Rust implementation was ~3.4x faster. This highlights the strength and efficiency of Rust's modern ecosystem, particularly its highly optimized libraries for common tasks like CSV parsing and file handling.
+#### C++ Tests
+```bash
+cd trading_system/src/cpp_core/build
+./orderbook_test
+./fix_test
+./sor_test
+./mm_test
+```
 
-**Conclusion**: Both C++ and Rust are elite languages for high-performance systems. This project demonstrates that C++ can offer a more direct path to raw performance in complex, CPU-bound algorithms, while Rust's safety guarantees and modern ecosystem can lead to extremely robust and performant systems when considering the entire application lifecycle. The choice between them depends on the specific trade-offs a team is willing to make between raw algorithmic speed, provable safety, and ecosystem maturity.
+#### Rust Tests
+```bash
+cd trading_system/src/rust_core
+cargo test
+```
+
+### Performance Benchmarks
+
+#### C++ Benchmarks
+```bash
+cd trading_system/src/cpp_core/build
+./matching_benchmark
+./detailed_perf
+```
+
+#### Rust Benchmarks
+```bash
+cd trading_system/src/rust_core
+cargo bench
+./target/release/detailed_perf
+```
+
+## 📁 Project Structure
+
+```
+trading_system/
+├── src/
+│   ├── cpp_core/           # C++ implementation
+│   │   ├── include/        # Headers
+│   │   ├── src/           # Source files
+│   │   └── benchmarks/    # Performance tests
+│   └── rust_core/         # Rust implementation
+│       ├── src/           # Source files
+│       ├── benches/       # Criterion benchmarks
+│       └── examples/      # Example applications
+├── docs/
+│   └── architecture.md    # System design documentation
+├── PERFORMANCE.md         # Performance analysis report
+└── README.md             # This file
+```
+
+## 🔑 Key Design Decisions
+
+### C++ Implementation
+- **Modern C++ practices**: RAII, smart pointers, move semantics
+- **STL containers**: std::map for order books, std::unordered_map for order lookup
+- **Virtual dispatch**: Abstract base classes for exchange polymorphism
+
+### Rust Implementation
+- **Zero-cost abstractions**: Trait-based design with static dispatch where possible
+- **Memory safety**: Compile-time guarantees without garbage collection
+- **Async I/O**: Tokio-based async runtime for network operations
+
+## 🎯 Use Cases
+
+This trading system is designed for:
+- **High-frequency trading firms** requiring sub-microsecond latencies
+- **Market makers** needing robust inventory management
+- **Proprietary trading desks** with multi-exchange connectivity needs
+- **Academic research** into trading system architecture and performance
+
+## 🔧 Configuration
+
+Both implementations support runtime configuration for:
+- Exchange endpoints and connectivity
+- Strategy parameters (spreads, inventory limits)
+- Risk management thresholds
+- Performance tuning options
+
+## 📈 Future Enhancements
+
+- **Risk Management Layer**: Pre-trade checks and position monitoring
+- **Historical Data Service**: Backtesting infrastructure
+- **Multi-Asset Support**: Extend beyond single instruments
+- **Cloud Deployment**: Kubernetes-ready containerization
+- **Hardware Acceleration**: FPGA integration for order gateways
+
+## 📚 Documentation
+
+- [Architecture Overview](docs/architecture.md) - System design and component interactions
+- [Performance Report](PERFORMANCE.md) - Detailed benchmark analysis
+- [API Documentation](docs/api.md) - Component interfaces (coming soon)
+
+## 🤝 Contributing
+
+This project is designed as a portfolio piece demonstrating systems programming expertise. While not actively seeking contributions, feedback and discussions about the implementation choices are welcome.
+
+## 📄 License
+
+This project is available under the MIT License. See LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Built with modern C++17 and Rust 2021 Edition
+- Benchmarked using Google Benchmark and Criterion
+- Inspired by real-world trading system architectures
+
+---
+
+*This project demonstrates production-grade trading system development with a focus on performance, reliability, and maintainability. For questions or discussions about the implementation, please open an issue.*
