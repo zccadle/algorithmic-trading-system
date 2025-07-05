@@ -1,0 +1,82 @@
+   Compiling serde v1.0.219
+   Compiling once_cell v1.21.3
+   Compiling crossbeam-utils v0.8.21
+   Compiling autocfg v1.5.0
+   Compiling rayon-core v1.12.1
+   Compiling either v1.15.0
+   Compiling half v2.6.0
+   Compiling regex-syntax v0.8.5
+   Compiling anstyle v1.0.11
+   Compiling clap_lex v0.7.5
+   Compiling ciborium-io v0.2.2
+   Compiling plotters-backend v0.3.7
+   Compiling same-file v1.0.6
+   Compiling cast v0.3.0
+   Compiling walkdir v2.5.0
+   Compiling itertools v0.10.5
+   Compiling tempfile v3.20.0
+   Compiling plotters-svg v0.3.7
+   Compiling ciborium-ll v0.2.2
+   Compiling clap_builder v4.5.40
+   Compiling is-terminal v0.4.16
+   Compiling oorandom v11.1.5
+   Compiling num-traits v0.2.19
+   Compiling anes v0.1.6
+   Compiling native-tls v0.2.14
+   Compiling tokio-native-tls v0.3.1
+   Compiling tungstenite v0.24.0
+   Compiling regex-automata v0.4.9
+   Compiling criterion-plot v0.5.0
+   Compiling tokio-tungstenite v0.24.0
+   Compiling crossbeam-epoch v0.9.18
+   Compiling clap v4.5.40
+   Compiling regex v1.11.1
+   Compiling crossbeam-deque v0.8.6
+   Compiling serde_json v1.0.140
+   Compiling csv v1.3.1
+   Compiling rayon v1.10.0
+   Compiling ciborium v0.2.2
+   Compiling plotters v0.3.7
+   Compiling rust_core v0.1.0 (/Users/dannylee/Desktop/codes/trading-systems-programming-languages/trading_system/src/rust_core)
+   Compiling tinytemplate v1.2.1
+   Compiling criterion v0.5.1
+    Finished `bench` profile [optimized + debuginfo] target(s) in 7.48s
+     Running benches/order_book_benchmark.rs (target/release/deps/order_book_benchmark-a1afc3766d52fc36)
+Gnuplot not found, using plotters backend
+Benchmarking add_10k_orders
+Benchmarking add_10k_orders: Warming up for 3.0000 s
+Benchmarking add_10k_orders: Collecting 100 samples in estimated 5.4715 s (900 iterations)
+Benchmarking add_10k_orders: Analyzing
+add_10k_orders          time:   [6.0745 ms 6.0956 ms 6.1190 ms]
+Found 5 outliers among 100 measurements (5.00%)
+  4 (4.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking mixed_10k_operations
+Benchmarking mixed_10k_operations: Warming up for 3.0000 s
+Benchmarking mixed_10k_operations: Collecting 100 samples in estimated 5.1292 s (1100 iterations)
+Benchmarking mixed_10k_operations: Analyzing
+mixed_10k_operations    time:   [4.6491 ms 4.6623 ms 4.6773 ms]
+Found 4 outliers among 100 measurements (4.00%)
+  1 (1.00%) high mild
+  3 (3.00%) high severe
+
+Benchmarking best_price_queries
+Benchmarking best_price_queries: Warming up for 3.0000 s
+Benchmarking best_price_queries: Collecting 100 samples in estimated 5.0035 s (3.3M iterations)
+Benchmarking best_price_queries: Analyzing
+best_price_queries      time:   [1.4964 µs 1.4995 µs 1.5032 µs]
+Found 10 outliers among 100 measurements (10.00%)
+  8 (8.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking matching_engine
+Benchmarking matching_engine: Warming up for 3.0000 s
+Benchmarking matching_engine: Collecting 100 samples in estimated 5.0348 s (10k iterations)
+Benchmarking matching_engine: Analyzing
+matching_engine         time:   [498.63 µs 499.75 µs 501.04 µs]
+Found 6 outliers among 100 measurements (6.00%)
+  1 (1.00%) low mild
+  1 (1.00%) high mild
+  4 (4.00%) high severe
+
