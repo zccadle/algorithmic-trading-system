@@ -1,0 +1,16 @@
+# Language overrides for GitHub
+# Mark build artifacts and vendored dependencies to exclude from language stats
+src/cpp_core/build/** linguist-generated=true
+src/rust_core/target/** linguist-generated=true
+build/** linguist-generated=true
+**/build/** linguist-generated=true
+external/** linguist-vendored=true
+
+# Ensure both languages are properly detected
+*.rs linguist-language=Rust
+*.cpp linguist-language=C++
+*.h linguist-language=C++
+*.hpp linguist-language=C++
+
+# Documentation
+*.md linguist-documentation

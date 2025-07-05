@@ -1,4 +1,9 @@
-# High-Performance Algorithmic Trading System
+# High-Performance Algorithmic Trading System: C++ vs Rust
+
+![C++](https://img.shields.io/badge/C++-00599C?style=flat&logo=c%2B%2B&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/yourusername/trading-system/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive trading system implementation featuring parallel architectures in C++ and Rust, designed to showcase modern systems programming techniques for ultra-low latency financial applications.
 
