@@ -22,3 +22,7 @@ rand = "0.8"
 [[bench]]
 name = "order_book_benchmark"
 harness = false
+
+[[bin]]
+name = "backtest_engine"
+path = "src/bin/backtest_engine.rs"
