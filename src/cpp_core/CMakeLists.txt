@@ -106,3 +106,7 @@ target_link_libraries(profile_matching order_book)
 # Create detailed performance analysis executable
 add_executable(detailed_perf src/detailed_perf.cpp)
 target_link_libraries(detailed_perf order_book)
+
+# Create backtest engine executable
+add_executable(backtest_engine src/backtest_engine.cpp)
+target_link_libraries(backtest_engine market_maker smart_order_router order_book)
