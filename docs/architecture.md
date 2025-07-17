@@ -2,7 +2,7 @@
 
 ## 1. High-Level Overview
 
-This trading system implements a modular, multi-component architecture designed for ultra-low latency performance, featuring parallel implementations in C++ and Rust to compare different design philosophies while maintaining functional parity.
+This trading system implements a sophisticated hybrid architecture combining Python for strategy development, C++/Rust for high-performance execution, and a comprehensive analytics layer. The system features both traditional order-book simulation and modern signal-based backtesting approaches.
 
 ## 2. Core Components
 
@@ -126,15 +126,85 @@ Both approaches achieve the same architectural goal—decoupling strategies from
 - Order flow audit trail for compliance
 - Real-time strategy performance tracking
 
-## 10. Future Architecture Enhancements
+## 10. Backtesting Infrastructure
 
-### Planned Improvements
-1. **Risk Management Layer**: Pre-trade risk checks and position limits
-2. **Historical Data Service**: Backtesting infrastructure for strategy development
-3. **Multi-Asset Support**: Extend beyond single-asset order books
-4. **Cloud-Native Adaptation**: Kubernetes-ready containerization
+### Two Backtesting Approaches
 
-### Technology Considerations
-- Investigation of io_uring for even lower latency I/O on Linux
-- GPU acceleration for complex strategy calculations
-- FPGA integration for ultra-low latency order gateway
+#### 1. Full Order-Book Simulation (`backtest_engine.cpp`)
+- Complete market microstructure simulation
+- Includes market maker and smart order router
+- Realistic order matching with configurable latency
+- Suitable for testing market-making strategies
+
+#### 2. Signal-Based Execution (`signal_backtest_engine.cpp`)
+- Streamlined execution based on position signals (-1, 0, 1)
+- Direct integration with Python strategy framework
+- Lower computational overhead for strategy research
+- Realistic slippage and market impact modeling
+
+### Python Integration Architecture
+
+The system employs a clean separation of concerns:
+
+```
+Python Strategy Layer              C++ Execution Core
+┌─────────────────┐               ┌──────────────────┐
+│ Strategy.calc() │─── Signals ──→│ SignalBacktest   │
+│ - MA Cross      │               │ Engine           │
+│ - RSI Mean Rev  │               │ - Execute trades │
+└─────────────────┘               │ - Track P&L     │
+        ↑                         │ - Apply costs   │
+        │                         └──────────────────┘
+        │                                  │
+    Market Data                        Trade Logs
+        │                                  │
+        └──────────────┬──────────────────┘
+                       ↓
+              ┌─────────────────┐
+              │ Python Analytics │
+              │ - Metrics calc   │
+              │ - Visualization  │
+              │ - Dashboard      │
+              └─────────────────┘
+```
+
+## 11. Market Data Pipeline
+
+### Data Flow
+1. **Download**: yfinance integration for historical data
+2. **Storage**: Parquet format for efficient columnar storage
+3. **Loading**: DataLoader class with automatic format detection
+4. **Processing**: Pandas DataFrames for strategy calculations
+
+### Interactive Dashboard
+- Built with Streamlit for web-based access
+- Real-time strategy parameter tuning
+- Performance visualization with Plotly
+- Trade analysis and export functionality
+
+## 12. Performance-Driven Design Decisions
+
+### Why C++ for Execution?
+Based on rigorous benchmarking (see [PERFORMANCE.md](PERFORMANCE.md)):
+- 2-4x faster than Rust for order operations
+- In-place memory modifications vs. Rust's heap allocations
+- Critical for sub-microsecond execution requirements
+
+### Why Python for Strategies?
+- Rapid prototyping with NumPy/Pandas
+- Rich ecosystem of technical indicators
+- Easy integration with ML libraries
+- Clean separation from execution layer
+
+## 13. Future Architecture Enhancements
+
+### In Progress
+- Extended Rust backtesting engine with signal support
+- Additional trading strategies (pairs trading, stat arb)
+- Real-time data feed integration
+
+### Planned
+- Machine learning strategy framework
+- Cloud deployment with monitoring
+- Multi-asset portfolio optimization
+- Risk management layer

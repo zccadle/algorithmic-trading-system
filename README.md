@@ -1,12 +1,12 @@
 # High-Performance Algorithmic Trading System
 
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat&logo=c%2B%2B&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/yourusername/trading-system/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A production-grade algorithmic trading system featuring a sophisticated architecture that leverages Python for flexible strategy development and C++/Rust for high-performance trade execution simulation.
+A production-grade algorithmic trading system built on data-driven architectural decisions. Features a Python strategy framework integrated with a high-performance C++ execution engine, chosen after rigorous performance benchmarking against Rust revealed a 2-4x speed advantage.
 
 ## 🏗️ System Architecture
 
@@ -85,6 +85,30 @@ This project implements a **signal-based architecture** that properly separates 
    - Momentum-based mean reversion
    - Buy oversold (RSI < 35), sell overbought (RSI > 65)
    - Adaptive position sizing
+
+## 🔬 Performance & Design Decisions
+
+### Why C++ for the Execution Core?
+
+Before building this system, I conducted rigorous benchmarks comparing C++ and Rust for HFT applications:
+
+| Operation | C++ | Rust | C++ Advantage |
+|-----------|-----|------|---------------|
+| Order Insertion (10K) | 2.64 ms | 6.10 ms | **2.31x faster** |
+| Mixed Operations (10K) | 2.41 ms | 4.66 ms | **1.93x faster** |
+| Matching Engine | 190.6 µs | 499.8 µs | **2.62x faster** |
+| Best Price Query | 1.16 µs | 1.50 µs | **1.29x faster** |
+
+**Key Finding**: C++'s ability to perform in-place modifications during iteration provides a significant performance advantage over Rust's ownership model, which requires additional heap allocations.
+
+📊 See [detailed performance analysis](docs/PERFORMANCE.md) and [system architecture](docs/architecture.md) for the complete research.
+
+### Architecture Decision Impact
+
+This performance research directly informed the system design:
+- **C++ Core**: Handles all latency-critical operations (order matching, trade execution)
+- **Python Layer**: Provides flexibility for rapid strategy development
+- **Clean Interface**: Signals passed via subprocess ensure language boundaries don't impact performance
 
 ## 🛠️ Getting Started
 
