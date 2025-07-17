@@ -7,7 +7,7 @@ name = "trading-framework"
 version = "0.1.0"
 description = "Professional algorithmic trading framework with high-performance C++/Rust execution"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
     {name = "Trading System Developer"},
