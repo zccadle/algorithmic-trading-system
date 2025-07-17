@@ -6,10 +6,13 @@ use rand::Rng;
 #[derive(Debug)]
 struct MarketDataPoint {
     timestamp: i64,
+    #[allow(dead_code)]
     symbol: String,
     bid: f64,
     ask: f64,
+    #[allow(dead_code)]
     bid_size: f64,
+    #[allow(dead_code)]
     ask_size: f64,
     last_price: f64,
     volume: f64,
@@ -45,6 +48,7 @@ struct BacktestConfig {
     initial_quote_inventory: f64,
     enable_market_impact: bool,
     enable_latency_simulation: bool,
+    #[allow(dead_code)]
     base_latency_us: f64,
     market_impact_factor: f64,
     aggressive_market_making: bool,
@@ -80,6 +84,7 @@ struct PerformanceMetrics {
     total_trades: usize,
     total_volume: f64,
     realized_pnl: f64,
+    #[allow(dead_code)]
     unrealized_pnl: f64,
     sharpe_ratio: f64,
     max_drawdown: f64,
@@ -211,6 +216,7 @@ impl BacktestEngine {
         total_impact + remaining_qty * self.config.market_impact_factor * levels[0].price
     }
     
+    #[allow(dead_code)]
     fn simulate_latency(&self) -> u64 {
         if !self.config.enable_latency_simulation {
             return 0;
