@@ -110,3 +110,7 @@ target_link_libraries(detailed_perf order_book)
 # Create backtest engine executable
 add_executable(backtest_engine src/backtest_engine.cpp)
 target_link_libraries(backtest_engine market_maker smart_order_router order_book)
+
+# Create signal-based backtest engine executable
+add_executable(signal_backtest_engine src/signal_backtest_engine.cpp)
+target_link_libraries(signal_backtest_engine)
