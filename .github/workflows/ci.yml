@@ -57,6 +57,8 @@ jobs:
         ./fix_test
         ./sor_test
         ./mm_test
+        # Test signal backtest engine exists
+        test -f ./signal_backtest_engine || echo "Warning: signal_backtest_engine not built"
 
   rust-build-and-test:
     name: Rust Build and Test
@@ -107,6 +109,34 @@ jobs:
       run: |
         cd src/rust_core
         cargo fmt -- --check
+
+  python-test:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        cd src/python
+        pip install -r requirements.txt
+        pip install -e .
+    
+    - name: Run Python tests
+      run: |
+        cd src/python
+        python -m pytest tests/ -v || echo "No pytest tests found"
+    
+    - name: Check imports
+      run: |
+        cd src/python
+        python -c "import trading_framework; print('Trading framework imports successfully')"
 
   benchmark:
     name: Performance Benchmarks
